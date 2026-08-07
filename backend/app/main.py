@@ -23,6 +23,9 @@ from app.modules.supplier.routers.supplier_router import (
 from app.modules.purchase.routers.purchase_router import (
     router as purchase_router,
 )
+from app.modules.customer.routers.customer_router import (
+    router as customer_router,
+)
 
 app = FastAPI(
     title="MobileERP API",
@@ -71,3 +74,4 @@ app.include_router(category_router)
 app.include_router(inventory_router)
 app.include_router(supplier_router)
 app.include_router(purchase_router)
+app.include_router(customer_router)

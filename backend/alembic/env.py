@@ -21,6 +21,7 @@ from app.modules.inventory.models.stock_movement import StockMovement  # noqa: F
 from app.modules.supplier.models.supplier import Supplier  # noqa: F401
 from app.modules.purchase.models.purchase import Purchase  # noqa: F401
 from app.modules.purchase.models.purchase_line import PurchaseLine  # noqa: F401
+from app.modules.customer.models.customer import Customer  # noqa: F401
 
 
 config = context.config
