@@ -42,3 +42,15 @@ class CustomerRepository(BaseRepository[Customer]):
         result = await self.session.execute(query)
 
         return list(result.scalars().all())
+
+    async def get_default(
+        self,
+    ) -> Customer | None:
+        query = select(Customer).where(
+            Customer.is_default_customer.is_(True),
+            Customer.is_active.is_(True),
+        )
+
+        result = await self.session.execute(query)
+
+        return result.scalar_one_or_none()

@@ -68,3 +68,17 @@ class ProductUnitRepository(BaseRepository[ProductUnit]):
         result = await self.session.execute(query)
 
         return result.scalar_one()
+
+    async def get_for_update(
+        self,
+        unit_id: UUID,
+    ) -> ProductUnit | None:
+        query = (
+            select(ProductUnit)
+            .where(ProductUnit.id == unit_id)
+            .with_for_update()
+        )
+
+        result = await self.session.execute(query)
+
+        return result.scalar_one_or_none()

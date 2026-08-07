@@ -68,3 +68,9 @@ class ProductUnit(
         nullable=True,
         index=True,
     )
+
+    sale_line_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("sale_line.id"),
+        nullable=True,
+        index=True,
+    )

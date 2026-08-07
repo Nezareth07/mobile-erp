@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import select
@@ -29,7 +30,9 @@ from app.modules.inventory.schemas.available_stock_response import (
     AvailableStockResponse,
 )
 from app.modules.inventory.schemas.batch_intake_create import BatchIntakeCreate
+from app.modules.inventory.schemas.batch_sale_create import BatchSaleCreate
 from app.modules.inventory.schemas.serial_intake_create import SerialIntakeCreate
+from app.modules.inventory.schemas.serial_sale_create import SerialSaleCreate
 from app.modules.inventory.schemas.stock_adjustment_create import (
     StockAdjustmentCreate,
 )
@@ -201,6 +204,115 @@ class InventoryService:
         await self.session.flush()
 
         return await self.stock_lot_repository.get_by_id(lot.id)
+
+    async def register_serial_sale(
+        self,
+        data: SerialSaleCreate,
+        sale_line_id: UUID,
+    ) -> ProductUnit:
+        product = await self._get_product(data.product_id)
+
+        if product.tracking_type != TrackingType.SERIAL:
+            raise BadRequestException("Product is not serial-tracked.")
+
+        unit = await self.product_unit_repository.get_by_imei(data.imei)
+
+        if unit is None or unit.product_id != product.id:
+            raise NotFoundException(
+                f"IMEI {data.imei} not found for this product."
+            )
+
+        locked_unit = await self.product_unit_repository.get_for_update(
+            unit.id
+        )
+
+        if locked_unit.status == ProductUnitStatus.SOLD:
+            raise ConflictException(f"IMEI {data.imei} already sold.")
+
+        if locked_unit.status != ProductUnitStatus.IN_STOCK:
+            raise BadRequestException(
+                f"IMEI {data.imei} is not available for sale."
+            )
+
+        locked_unit.status = ProductUnitStatus.SOLD
+        locked_unit.sale_line_id = sale_line_id
+
+        movement = StockMovement(
+            product_id=product.id,
+            movement_type=MovementType.SALE_OUT,
+            product_unit_id=locked_unit.id,
+            unit_cost=locked_unit.unit_cost,
+            location_id=data.location_id or locked_unit.location_id,
+            source_type=MovementSourceType.SALE,
+            source_reference=data.source_reference,
+            notes=data.notes,
+        )
+
+        await self.stock_movement_repository.create(movement)
+        await self.session.flush()
+
+        return locked_unit
+
+    async def register_batch_sale(
+        self,
+        data: BatchSaleCreate,
+    ) -> Decimal:
+        """Consumes stock FIFO across one or more lots; returns the
+        weighted-average unit cost of the stock actually consumed."""
+        product = await self._get_product(data.product_id)
+
+        if product.tracking_type == TrackingType.SERIAL:
+            raise BadRequestException(
+                "Product is serial-tracked; use serial sale instead."
+            )
+
+        lots = await self.stock_lot_repository.list_by_product(product.id)
+
+        remaining = data.quantity
+        total_cost = Decimal("0")
+
+        for lot in lots:
+            if remaining <= 0:
+                break
+
+            if lot.quantity_available <= 0:
+                continue
+
+            locked_lot = await self.stock_lot_repository.get_for_update(
+                lot.id
+            )
+
+            if locked_lot.quantity_available <= 0:
+                continue
+
+            consumed = min(locked_lot.quantity_available, remaining)
+
+            locked_lot.quantity_available -= consumed
+            remaining -= consumed
+            total_cost += consumed * locked_lot.unit_cost
+
+            movement = StockMovement(
+                product_id=product.id,
+                movement_type=MovementType.SALE_OUT,
+                stock_lot_id=locked_lot.id,
+                quantity=consumed,
+                unit_cost=locked_lot.unit_cost,
+                location_id=data.location_id or locked_lot.location_id,
+                source_type=MovementSourceType.SALE,
+                source_reference=data.source_reference,
+                notes=data.notes,
+            )
+
+            await self.stock_movement_repository.create(movement)
+
+        if remaining > 0:
+            raise BadRequestException(
+                "Not enough available stock to complete this sale."
+            )
+
+        await self.session.flush()
+
+        return total_cost / data.quantity
 
     async def get_available_stock(
         self,
