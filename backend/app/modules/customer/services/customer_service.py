@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
+    BadRequestException,
     ConflictException,
     NotFoundException,
 )
@@ -114,3 +115,31 @@ class CustomerService:
         customer.is_active = False
 
         await self.session.commit()
+
+    async def set_default_customer(
+        self,
+        customer_id: UUID,
+    ) -> Customer:
+
+        customer = await self.get_customer(customer_id)
+
+        if not customer.is_active:
+            raise BadRequestException("Customer is not active.")
+
+        if customer.is_default_customer:
+            return customer
+
+        current_default = await self.repository.get_default()
+
+        if current_default is not None and current_default.id != customer.id:
+            current_default.is_default_customer = False
+
+            await self.session.flush()
+
+        customer.is_default_customer = True
+
+        await self.session.commit()
+
+        await self.session.refresh(customer)
+
+        return customer

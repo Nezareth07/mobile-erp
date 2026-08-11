@@ -20,6 +20,16 @@ class Customer(
             unique=True,
             postgresql_where=text("document_id IS NOT NULL"),
         ),
+        # Garantiza a nivel de PostgreSQL que como maximo un Customer activo
+        # tenga is_default_customer=True — la integridad no depende del Service.
+        Index(
+            "uq_customer_default_active",
+            "is_default_customer",
+            unique=True,
+            postgresql_where=text(
+                "is_default_customer IS TRUE AND is_active IS TRUE"
+            ),
+        ),
     )
 
     name: Mapped[str] = mapped_column(

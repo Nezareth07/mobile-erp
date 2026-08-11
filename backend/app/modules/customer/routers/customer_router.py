@@ -77,3 +77,16 @@ async def delete_customer(
     service: CustomerService = Depends(get_customer_service),
 ):
     await service.delete_customer(customer_id)
+
+
+@router.put(
+    "/{customer_id}/default",
+    response_model=CustomerResponse,
+    status_code=200,
+    dependencies=[Depends(require_permission("customers.manage_default"))],
+)
+async def set_default_customer(
+    customer_id: UUID,
+    service: CustomerService = Depends(get_customer_service),
+):
+    return await service.set_default_customer(customer_id)
