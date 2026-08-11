@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database.session import get_session
+from app.modules.auth.dependencies import require_permission
 from app.modules.product.schemas.product_create import ProductCreate
 from app.modules.product.schemas.product_response import ProductResponse
 from app.modules.product.schemas.product_update import ProductUpdate
@@ -19,6 +20,7 @@ router = APIRouter(
     "",
     response_model=ProductResponse,
     status_code=201,
+    dependencies=[Depends(require_permission("products.create"))],
 )
 async def create_product(
     data: ProductCreate,
@@ -32,6 +34,7 @@ async def create_product(
 @router.get(
     "",
     response_model=list[ProductResponse],
+    dependencies=[Depends(require_permission("products.read"))],
 )
 async def get_products(
     session: AsyncSession = Depends(get_session),
@@ -44,6 +47,7 @@ async def get_products(
 @router.get(
     "/{product_id}",
     response_model=ProductResponse,
+    dependencies=[Depends(require_permission("products.read"))],
 )
 async def get_product(
     product_id: UUID,
@@ -57,6 +61,7 @@ async def get_product(
 @router.put(
     "/{product_id}",
     response_model=ProductResponse,
+    dependencies=[Depends(require_permission("products.update"))],
 )
 async def update_product(
     product_id: UUID,
@@ -74,6 +79,7 @@ async def update_product(
 @router.delete(
     "/{product_id}",
     status_code=204,
+    dependencies=[Depends(require_permission("products.delete"))],
 )
 async def delete_product(
     product_id: UUID,

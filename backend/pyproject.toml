@@ -10,4 +10,7 @@ dependencies = [
     "asyncpg",
     "alembic",
     "pydantic-settings",
+    "email-validator",
+    "bcrypt",
+    "pyjwt",
 ]

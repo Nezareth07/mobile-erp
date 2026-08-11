@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
+from app.modules.auth.dependencies import require_permission
 from app.modules.customer.dependencies import get_customer_service
 from app.modules.customer.schemas.customer_create import CustomerCreate
 from app.modules.customer.schemas.customer_response import CustomerResponse
@@ -18,6 +19,7 @@ router = APIRouter(
     "",
     response_model=CustomerResponse,
     status_code=201,
+    dependencies=[Depends(require_permission("customers.create"))],
 )
 async def create_customer(
     data: CustomerCreate,
@@ -29,6 +31,7 @@ async def create_customer(
 @router.get(
     "",
     response_model=list[CustomerResponse],
+    dependencies=[Depends(require_permission("customers.read"))],
 )
 async def get_customers(
     service: CustomerService = Depends(get_customer_service),
@@ -39,6 +42,7 @@ async def get_customers(
 @router.get(
     "/{customer_id}",
     response_model=CustomerResponse,
+    dependencies=[Depends(require_permission("customers.read"))],
 )
 async def get_customer(
     customer_id: UUID,
@@ -50,6 +54,7 @@ async def get_customer(
 @router.put(
     "/{customer_id}",
     response_model=CustomerResponse,
+    dependencies=[Depends(require_permission("customers.update"))],
 )
 async def update_customer(
     customer_id: UUID,
@@ -65,6 +70,7 @@ async def update_customer(
 @router.delete(
     "/{customer_id}",
     status_code=204,
+    dependencies=[Depends(require_permission("customers.delete"))],
 )
 async def delete_customer(
     customer_id: UUID,

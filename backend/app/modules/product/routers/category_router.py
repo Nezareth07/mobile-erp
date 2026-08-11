@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database.session import get_session
+from app.modules.auth.dependencies import require_permission
 from app.modules.product.schemas.category_create import (
     CategoryCreate,
 )
@@ -27,6 +28,7 @@ router = APIRouter(
     "",
     response_model=CategoryResponse,
     status_code=201,
+    dependencies=[Depends(require_permission("categories.create"))],
 )
 async def create_category(
     data: CategoryCreate,
@@ -40,6 +42,7 @@ async def create_category(
 @router.get(
     "",
     response_model=list[CategoryResponse],
+    dependencies=[Depends(require_permission("categories.read"))],
 )
 async def get_categories(
     session: AsyncSession = Depends(get_session),
@@ -52,6 +55,7 @@ async def get_categories(
 @router.get(
     "/{category_id}",
     response_model=CategoryResponse,
+    dependencies=[Depends(require_permission("categories.read"))],
 )
 async def get_category(
     category_id: UUID,
@@ -65,6 +69,7 @@ async def get_category(
 @router.put(
     "/{category_id}",
     response_model=CategoryResponse,
+    dependencies=[Depends(require_permission("categories.update"))],
 )
 async def update_category(
     category_id: UUID,
@@ -82,6 +87,7 @@ async def update_category(
 @router.delete(
     "/{category_id}",
     status_code=204,
+    dependencies=[Depends(require_permission("categories.delete"))],
 )
 async def delete_category(
     category_id: UUID,

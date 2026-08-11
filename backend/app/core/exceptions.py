@@ -12,3 +12,11 @@ class ConflictException(AppException):
 
 class BadRequestException(AppException):
     pass
+
+
+class UnauthorizedException(AppException):
+    pass
+
+
+class ForbiddenException(AppException):
+    pass

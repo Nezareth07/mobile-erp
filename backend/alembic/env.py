@@ -24,6 +24,11 @@ from app.modules.purchase.models.purchase_line import PurchaseLine  # noqa: F401
 from app.modules.customer.models.customer import Customer  # noqa: F401
 from app.modules.sale.models.sale import Sale  # noqa: F401
 from app.modules.sale.models.sale_line import SaleLine  # noqa: F401
+from app.modules.auth.models.user import User  # noqa: F401
+from app.modules.auth.models.role import Role  # noqa: F401
+from app.modules.auth.models.permission import Permission  # noqa: F401
+from app.modules.auth.models.user_role import UserRole  # noqa: F401
+from app.modules.auth.models.role_permission import RolePermission  # noqa: F401
 
 
 config = context.config

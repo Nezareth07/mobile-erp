@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
+from app.modules.auth.dependencies import require_permission
 from app.modules.supplier.dependencies import get_supplier_service
 from app.modules.supplier.schemas.supplier_create import SupplierCreate
 from app.modules.supplier.schemas.supplier_response import SupplierResponse
@@ -18,6 +19,7 @@ router = APIRouter(
     "",
     response_model=SupplierResponse,
     status_code=201,
+    dependencies=[Depends(require_permission("suppliers.create"))],
 )
 async def create_supplier(
     data: SupplierCreate,
@@ -29,6 +31,7 @@ async def create_supplier(
 @router.get(
     "",
     response_model=list[SupplierResponse],
+    dependencies=[Depends(require_permission("suppliers.read"))],
 )
 async def get_suppliers(
     service: SupplierService = Depends(get_supplier_service),
@@ -39,6 +42,7 @@ async def get_suppliers(
 @router.get(
     "/{supplier_id}",
     response_model=SupplierResponse,
+    dependencies=[Depends(require_permission("suppliers.read"))],
 )
 async def get_supplier(
     supplier_id: UUID,
@@ -50,6 +54,7 @@ async def get_supplier(
 @router.put(
     "/{supplier_id}",
     response_model=SupplierResponse,
+    dependencies=[Depends(require_permission("suppliers.update"))],
 )
 async def update_supplier(
     supplier_id: UUID,
@@ -65,6 +70,7 @@ async def update_supplier(
 @router.delete(
     "/{supplier_id}",
     status_code=204,
+    dependencies=[Depends(require_permission("suppliers.delete"))],
 )
 async def delete_supplier(
     supplier_id: UUID,

@@ -6,7 +6,9 @@ from app.core.exceptions import (
     AppException,
     BadRequestException,
     ConflictException,
+    ForbiddenException,
     NotFoundException,
+    UnauthorizedException,
 )
 from app.modules.product.routers.product_router import router as product_router
 from app.modules.product.routers.brand_router import router as brand_router
@@ -28,6 +30,9 @@ from app.modules.customer.routers.customer_router import (
 )
 from app.modules.sale.routers.sale_router import (
     router as sale_router,
+)
+from app.modules.auth.routers.auth_router import (
+    router as auth_router,
 )
 
 app = FastAPI(
@@ -55,6 +60,16 @@ async def bad_request_exception_handler(_: Request, exc: BadRequestException):
     return _build_error_response(400, str(exc))
 
 
+@app.exception_handler(UnauthorizedException)
+async def unauthorized_exception_handler(_: Request, exc: UnauthorizedException):
+    return _build_error_response(401, str(exc))
+
+
+@app.exception_handler(ForbiddenException)
+async def forbidden_exception_handler(_: Request, exc: ForbiddenException):
+    return _build_error_response(403, str(exc))
+
+
 @app.exception_handler(AppException)
 async def app_exception_handler(_: Request, exc: AppException):
     return _build_error_response(400, str(exc))
@@ -79,3 +94,4 @@ app.include_router(supplier_router)
 app.include_router(purchase_router)
 app.include_router(customer_router)
 app.include_router(sale_router)
+app.include_router(auth_router)

@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
+from app.modules.auth.dependencies import require_permission
 from app.modules.sale.dependencies import get_sale_service
 from app.modules.sale.schemas.sale_create import SaleCreate
 from app.modules.sale.schemas.sale_response import SaleResponse
@@ -17,6 +18,7 @@ router = APIRouter(
     "",
     response_model=SaleResponse,
     status_code=201,
+    dependencies=[Depends(require_permission("sales.create"))],
 )
 async def create_sale(
     data: SaleCreate,
@@ -28,6 +30,7 @@ async def create_sale(
 @router.get(
     "",
     response_model=list[SaleResponse],
+    dependencies=[Depends(require_permission("sales.read"))],
 )
 async def get_sales(
     customer_id: UUID | None = None,
@@ -41,6 +44,7 @@ async def get_sales(
 @router.get(
     "/{sale_id}",
     response_model=SaleResponse,
+    dependencies=[Depends(require_permission("sales.read"))],
 )
 async def get_sale(
     sale_id: UUID,

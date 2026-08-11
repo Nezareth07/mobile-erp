@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
+from app.modules.auth.dependencies import require_permission
 from app.modules.purchase.dependencies import get_purchase_service
 from app.modules.purchase.schemas.purchase_create import PurchaseCreate
 from app.modules.purchase.schemas.purchase_response import PurchaseResponse
@@ -17,6 +18,7 @@ router = APIRouter(
     "",
     response_model=PurchaseResponse,
     status_code=201,
+    dependencies=[Depends(require_permission("purchases.create"))],
 )
 async def create_purchase(
     data: PurchaseCreate,
@@ -28,6 +30,7 @@ async def create_purchase(
 @router.get(
     "",
     response_model=list[PurchaseResponse],
+    dependencies=[Depends(require_permission("purchases.read"))],
 )
 async def get_purchases(
     supplier_id: UUID | None = None,
@@ -41,6 +44,7 @@ async def get_purchases(
 @router.get(
     "/{purchase_id}",
     response_model=PurchaseResponse,
+    dependencies=[Depends(require_permission("purchases.read"))],
 )
 async def get_purchase(
     purchase_id: UUID,
