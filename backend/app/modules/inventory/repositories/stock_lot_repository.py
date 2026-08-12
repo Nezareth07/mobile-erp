@@ -1,11 +1,12 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import Row, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.repositories.base_repository import BaseRepository
 from app.modules.inventory.models.stock_lot import StockLot
+from app.modules.product.models.product import Product
 
 
 class StockLotRepository(BaseRepository[StockLot]):
@@ -69,3 +70,27 @@ class StockLotRepository(BaseRepository[StockLot]):
         result = await self.session.execute(query)
 
         return result.scalar_one()
+
+    async def get_valuation_by_product(
+        self,
+        location_id: UUID | None,
+    ) -> list[Row]:
+        quantity_on_hand = func.coalesce(func.sum(StockLot.quantity_available), 0)
+        total_value = func.coalesce(
+            func.sum(StockLot.quantity_available * StockLot.unit_cost), 0
+        )
+
+        query = (
+            select(Product, quantity_on_hand, total_value)
+            .join(StockLot, StockLot.product_id == Product.id)
+            .where(StockLot.quantity_available > 0)
+            .group_by(Product.id)
+            .order_by(Product.name)
+        )
+
+        if location_id is not None:
+            query = query.where(StockLot.location_id == location_id)
+
+        result = await self.session.execute(query)
+
+        return list(result.all())

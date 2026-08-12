@@ -1,12 +1,13 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import Row, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.repositories.base_repository import BaseRepository
 from app.modules.inventory.enums.product_unit_status import ProductUnitStatus
 from app.modules.inventory.models.product_unit import ProductUnit
+from app.modules.product.models.product import Product
 
 
 class ProductUnitRepository(BaseRepository[ProductUnit]):
@@ -82,3 +83,26 @@ class ProductUnitRepository(BaseRepository[ProductUnit]):
         result = await self.session.execute(query)
 
         return result.scalar_one_or_none()
+
+    async def get_valuation_by_product(
+        self,
+        location_id: UUID | None,
+    ) -> list[Row]:
+        query = (
+            select(
+                Product,
+                func.count(ProductUnit.id),
+                func.coalesce(func.sum(ProductUnit.unit_cost), 0),
+            )
+            .join(ProductUnit, ProductUnit.product_id == Product.id)
+            .where(ProductUnit.status == ProductUnitStatus.IN_STOCK)
+            .group_by(Product.id)
+            .order_by(Product.name)
+        )
+
+        if location_id is not None:
+            query = query.where(ProductUnit.location_id == location_id)
+
+        result = await self.session.execute(query)
+
+        return list(result.all())

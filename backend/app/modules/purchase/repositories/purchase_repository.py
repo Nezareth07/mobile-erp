@@ -9,6 +9,7 @@ from app.core.repositories.base_repository import BaseRepository
 from app.modules.purchase.enums.purchase_status import PurchaseStatus
 from app.modules.purchase.models.purchase import Purchase
 from app.modules.purchase.models.purchase_line import PurchaseLine
+from app.modules.supplier.models.supplier import Supplier
 
 
 class PurchaseRepository(BaseRepository[Purchase]):
@@ -82,3 +83,66 @@ class PurchaseRepository(BaseRepository[Purchase]):
         result = await self.session.execute(query)
 
         return result.one()
+
+    async def get_daily_series(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+    ) -> list[Row]:
+        day = func.date_trunc("day", Purchase.purchase_date).label("day")
+
+        query = (
+            select(
+                day,
+                func.count(Purchase.id),
+                func.coalesce(func.sum(Purchase.total_cost), 0),
+            )
+            .where(
+                Purchase.status == PurchaseStatus.CONFIRMED,
+                Purchase.purchase_date >= date_from,
+                Purchase.purchase_date < date_to,
+            )
+            .group_by(day)
+            .order_by(day)
+        )
+
+        if location_id is not None:
+            query = query.where(Purchase.location_id == location_id)
+
+        result = await self.session.execute(query)
+
+        return list(result.all())
+
+    async def get_top_suppliers(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+        limit: int,
+    ) -> list[Row]:
+        total_cost = func.coalesce(func.sum(Purchase.total_cost), 0)
+
+        query = (
+            select(
+                Supplier,
+                func.count(Purchase.id),
+                total_cost,
+            )
+            .join(Supplier, Purchase.supplier_id == Supplier.id)
+            .where(
+                Purchase.status == PurchaseStatus.CONFIRMED,
+                Purchase.purchase_date >= date_from,
+                Purchase.purchase_date < date_to,
+            )
+            .group_by(Supplier.id)
+            .order_by(total_cost.desc())
+            .limit(limit)
+        )
+
+        if location_id is not None:
+            query = query.where(Purchase.location_id == location_id)
+
+        result = await self.session.execute(query)
+
+        return list(result.all())

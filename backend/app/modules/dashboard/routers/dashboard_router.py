@@ -8,10 +8,10 @@ from app.modules.dashboard.dependencies import get_dashboard_service
 from app.modules.dashboard.schemas.dashboard_summary_response import (
     DashboardSummaryResponse,
 )
-from app.modules.dashboard.schemas.recent_activity_item import (
+from app.modules.dashboard.services.dashboard_service import DashboardService
+from app.modules.inventory.schemas.recent_activity_item import (
     RecentActivityItem,
 )
-from app.modules.dashboard.services.dashboard_service import DashboardService
 from app.modules.sale.schemas.daily_sales_point import DailySalesPoint
 from app.modules.sale.schemas.top_customer import TopCustomer
 from app.modules.sale.schemas.top_selling_product import TopSellingProduct

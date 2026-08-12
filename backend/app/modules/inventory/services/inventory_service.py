@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -36,9 +37,13 @@ from app.modules.inventory.schemas.serial_sale_create import SerialSaleCreate
 from app.modules.inventory.schemas.stock_adjustment_create import (
     StockAdjustmentCreate,
 )
+from app.modules.inventory.schemas.stock_valuation_line import (
+    StockValuationLine,
+)
 from app.modules.product.enums.tracking_type import TrackingType
 from app.modules.product.models.product import Product
 from app.modules.product.repositories.product_repository import ProductRepository
+from app.modules.product.schemas.product_summary import ProductSummary
 
 
 # Maps a movement's source into the concrete ledger entry for each direction.
@@ -516,4 +521,70 @@ class InventoryService:
 
         return await self.stock_movement_repository.list_recent(
             limit, location_id
+        )
+
+    async def get_stock_valuation(
+        self,
+        location_id: UUID | None,
+    ) -> list[StockValuationLine]:
+        """Foto del valor de stock actual -- SERIAL cuenta unicamente
+        ProductUnit.IN_STOCK, BATCH/NONE usa unicamente
+        StockLot.quantity_available. Nunca quantity_received (eso es lo
+        recibido historicamente, no lo que queda). Un producto solo
+        aparece en una de las dos consultas segun su tracking_type, nunca
+        en ambas, por lo que no hay conflicto al concatenar resultados."""
+        if location_id is not None:
+            await self.resolve_location(location_id)
+
+        serial_rows = await self.product_unit_repository.get_valuation_by_product(
+            location_id
+        )
+        batch_rows = await self.stock_lot_repository.get_valuation_by_product(
+            location_id
+        )
+
+        lines = [
+            StockValuationLine(
+                product=ProductSummary.model_validate(product),
+                tracking_type=product.tracking_type,
+                quantity_on_hand=quantity_on_hand,
+                total_value=total_value,
+            )
+            for product, quantity_on_hand, total_value in (
+                *serial_rows,
+                *batch_rows,
+            )
+        ]
+
+        return sorted(lines, key=lambda line: line.product.name)
+
+    async def get_movements_report(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        product_id: UUID | None,
+        location_id: UUID | None,
+        movement_type: MovementType | None,
+        limit: int,
+        offset: int,
+    ) -> list[StockMovement]:
+        if date_from >= date_to:
+            raise BadRequestException(
+                "date_from must be strictly before date_to."
+            )
+
+        if location_id is not None:
+            await self.resolve_location(location_id)
+
+        if product_id is not None:
+            await self._get_product(product_id)
+
+        return await self.stock_movement_repository.list_filtered(
+            date_from,
+            date_to,
+            product_id,
+            location_id,
+            movement_type,
+            limit,
+            offset,
         )
