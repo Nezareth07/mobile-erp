@@ -25,6 +25,7 @@ from app.modules.purchase.repositories.purchase_repository import (
     PurchaseRepository,
 )
 from app.modules.purchase.schemas.purchase_create import PurchaseCreate
+from app.modules.purchase.schemas.purchases_summary import PurchasesSummary
 from app.modules.supplier.repositories.supplier_repository import (
     SupplierRepository,
 )
@@ -213,3 +214,26 @@ class PurchaseService:
                     )
 
         return products
+
+    async def get_purchases_summary(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+    ) -> PurchasesSummary:
+        if date_from >= date_to:
+            raise BadRequestException(
+                "date_from must be strictly before date_to."
+            )
+
+        if location_id is not None:
+            await self.inventory_service.resolve_location(location_id)
+
+        count, total_cost = await self.purchase_repository.get_summary(
+            date_from, date_to, location_id
+        )
+
+        return PurchasesSummary(
+            purchases_count=count,
+            total_cost=total_cost,
+        )

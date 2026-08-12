@@ -505,3 +505,15 @@ class InventoryService:
         )
 
         await self.stock_movement_repository.create(movement)
+
+    async def get_recent_movements(
+        self,
+        limit: int,
+        location_id: UUID | None,
+    ) -> list[StockMovement]:
+        if location_id is not None:
+            await self.resolve_location(location_id)
+
+        return await self.stock_movement_repository.list_recent(
+            limit, location_id
+        )

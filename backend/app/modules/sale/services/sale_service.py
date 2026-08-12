@@ -13,6 +13,7 @@ from app.modules.customer.models.customer import Customer
 from app.modules.customer.repositories.customer_repository import (
     CustomerRepository,
 )
+from app.modules.customer.schemas.customer_summary import CustomerSummary
 from app.modules.inventory.enums.product_unit_status import ProductUnitStatus
 from app.modules.inventory.schemas.batch_sale_create import BatchSaleCreate
 from app.modules.inventory.schemas.serial_sale_create import SerialSaleCreate
@@ -20,6 +21,7 @@ from app.modules.inventory.services.inventory_service import InventoryService
 from app.modules.product.enums.tracking_type import TrackingType
 from app.modules.product.models.product import Product
 from app.modules.product.repositories.product_repository import ProductRepository
+from app.modules.product.schemas.product_summary import ProductSummary
 from app.modules.sale.enums.sale_status import SaleStatus
 from app.modules.sale.models.sale import Sale
 from app.modules.sale.models.sale_line import SaleLine
@@ -27,7 +29,11 @@ from app.modules.sale.repositories.sale_line_repository import (
     SaleLineRepository,
 )
 from app.modules.sale.repositories.sale_repository import SaleRepository
+from app.modules.sale.schemas.daily_sales_point import DailySalesPoint
 from app.modules.sale.schemas.sale_create import SaleCreate
+from app.modules.sale.schemas.sales_summary import SalesSummary
+from app.modules.sale.schemas.top_customer import TopCustomer
+from app.modules.sale.schemas.top_selling_product import TopSellingProduct
 
 
 class SaleService:
@@ -265,3 +271,123 @@ class SaleService:
                 )
 
         return products
+
+    async def get_sales_summary(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+    ) -> SalesSummary:
+        self._validate_date_range(date_from, date_to)
+
+        if location_id is not None:
+            await self.inventory_service.resolve_location(location_id)
+
+        count, total_amount, total_cost, total_profit = (
+            await self.sale_repository.get_summary(
+                date_from, date_to, location_id
+            )
+        )
+
+        return SalesSummary(
+            sales_count=count,
+            total_amount=total_amount,
+            total_cost=total_cost,
+            total_profit=total_profit,
+        )
+
+    async def get_daily_sales_overview(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+    ) -> list[DailySalesPoint]:
+        self._validate_date_range(date_from, date_to)
+
+        if location_id is not None:
+            await self.inventory_service.resolve_location(location_id)
+
+        rows = await self.sale_repository.get_daily_series(
+            date_from, date_to, location_id
+        )
+
+        return [
+            DailySalesPoint(
+                date=day.date(),
+                sales_count=count,
+                revenue=revenue,
+                cost=cost,
+                profit=profit,
+            )
+            for day, count, revenue, cost, profit in rows
+        ]
+
+    async def get_top_products(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+        limit: int,
+        order_by: str = "revenue",
+    ) -> list[TopSellingProduct]:
+        self._validate_date_range(date_from, date_to)
+
+        if order_by not in ("revenue", "quantity"):
+            raise BadRequestException(
+                "order_by must be 'revenue' or 'quantity'."
+            )
+
+        if location_id is not None:
+            await self.inventory_service.resolve_location(location_id)
+
+        rows = await self.sale_line_repository.get_top_products(
+            date_from,
+            date_to,
+            location_id,
+            limit,
+            order_by == "quantity",
+        )
+
+        return [
+            TopSellingProduct(
+                product=ProductSummary.model_validate(product),
+                quantity_sold=quantity_sold,
+                revenue=revenue,
+            )
+            for product, quantity_sold, revenue in rows
+        ]
+
+    async def get_top_customers(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+        limit: int,
+    ) -> list[TopCustomer]:
+        self._validate_date_range(date_from, date_to)
+
+        if location_id is not None:
+            await self.inventory_service.resolve_location(location_id)
+
+        rows = await self.sale_repository.get_top_customers(
+            date_from, date_to, location_id, limit
+        )
+
+        return [
+            TopCustomer(
+                customer=CustomerSummary.model_validate(customer),
+                sales_count=count,
+                revenue=revenue,
+            )
+            for customer, count, revenue in rows
+        ]
+
+    @staticmethod
+    def _validate_date_range(
+        date_from: datetime,
+        date_to: datetime,
+    ) -> None:
+        if date_from >= date_to:
+            raise BadRequestException(
+                "date_from must be strictly before date_to."
+            )

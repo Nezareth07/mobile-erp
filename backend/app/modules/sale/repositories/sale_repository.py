@@ -1,10 +1,13 @@
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import Row, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.repositories.base_repository import BaseRepository
+from app.modules.customer.models.customer import Customer
+from app.modules.sale.enums.sale_status import SaleStatus
 from app.modules.sale.models.sale import Sale
 from app.modules.sale.models.sale_line import SaleLine
 
@@ -58,3 +61,92 @@ class SaleRepository(BaseRepository[Sale]):
         result = await self.session.execute(query)
 
         return list(result.scalars().all())
+
+    async def get_summary(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+    ) -> Row:
+        query = select(
+            func.count(Sale.id),
+            func.coalesce(func.sum(Sale.total_amount), 0),
+            func.coalesce(func.sum(Sale.total_cost), 0),
+            func.coalesce(func.sum(Sale.profit), 0),
+        ).where(
+            Sale.status == SaleStatus.CONFIRMED,
+            Sale.sale_date >= date_from,
+            Sale.sale_date < date_to,
+        )
+
+        if location_id is not None:
+            query = query.where(Sale.location_id == location_id)
+
+        result = await self.session.execute(query)
+
+        return result.one()
+
+    async def get_daily_series(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+    ) -> list[Row]:
+        day = func.date_trunc("day", Sale.sale_date).label("day")
+
+        query = (
+            select(
+                day,
+                func.count(Sale.id),
+                func.coalesce(func.sum(Sale.total_amount), 0),
+                func.coalesce(func.sum(Sale.total_cost), 0),
+                func.coalesce(func.sum(Sale.profit), 0),
+            )
+            .where(
+                Sale.status == SaleStatus.CONFIRMED,
+                Sale.sale_date >= date_from,
+                Sale.sale_date < date_to,
+            )
+            .group_by(day)
+            .order_by(day)
+        )
+
+        if location_id is not None:
+            query = query.where(Sale.location_id == location_id)
+
+        result = await self.session.execute(query)
+
+        return list(result.all())
+
+    async def get_top_customers(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+        location_id: UUID | None,
+        limit: int,
+    ) -> list[Row]:
+        revenue = func.coalesce(func.sum(Sale.total_amount), 0)
+
+        query = (
+            select(
+                Customer,
+                func.count(Sale.id),
+                revenue,
+            )
+            .join(Customer, Sale.customer_id == Customer.id)
+            .where(
+                Sale.status == SaleStatus.CONFIRMED,
+                Sale.sale_date >= date_from,
+                Sale.sale_date < date_to,
+            )
+            .group_by(Customer.id)
+            .order_by(revenue.desc())
+            .limit(limit)
+        )
+
+        if location_id is not None:
+            query = query.where(Sale.location_id == location_id)
+
+        result = await self.session.execute(query)
+
+        return list(result.all())

@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repositories.base_repository import BaseRepository
@@ -42,6 +42,15 @@ class CustomerRepository(BaseRepository[Customer]):
         result = await self.session.execute(query)
 
         return list(result.scalars().all())
+
+    async def count_active(
+        self,
+    ) -> int:
+        query = select(func.count()).where(Customer.is_active.is_(True))
+
+        result = await self.session.execute(query)
+
+        return result.scalar_one()
 
     async def get_default(
         self,

@@ -38,6 +38,11 @@ class SupplierService:
     ) -> list[Supplier]:
         return await self.repository.get_active()
 
+    async def count_active_suppliers(
+        self,
+    ) -> int:
+        return await self.repository.count_active()
+
     async def create_supplier(
         self,
         data: SupplierCreate,

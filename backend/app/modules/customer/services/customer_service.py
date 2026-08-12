@@ -39,6 +39,11 @@ class CustomerService:
     ) -> list[Customer]:
         return await self.repository.get_active()
 
+    async def count_active_customers(
+        self,
+    ) -> int:
+        return await self.repository.count_active()
+
     async def create_customer(
         self,
         data: CustomerCreate,

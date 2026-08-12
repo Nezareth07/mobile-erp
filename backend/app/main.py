@@ -45,6 +45,9 @@ from app.modules.auth.routers.role_router import (
 from app.modules.auth.routers.permission_router import (
     router as permission_router,
 )
+from app.modules.dashboard.routers.dashboard_router import (
+    router as dashboard_router,
+)
 
 app = FastAPI(
     title="MobileERP API",
@@ -119,5 +122,6 @@ api_router.include_router(auth_router)
 api_router.include_router(user_router)
 api_router.include_router(role_router)
 api_router.include_router(permission_router)
+api_router.include_router(dashboard_router)
 
 app.include_router(api_router)

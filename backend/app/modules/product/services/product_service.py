@@ -47,6 +47,11 @@ class ProductService:
     ) -> list[Product]:
         return await self.product_repository.get_active()
 
+    async def count_active_products(
+        self,
+    ) -> int:
+        return await self.product_repository.count_active()
+
     async def create_product(
         self,
         data: ProductCreate,
