@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Request
+from fastapi import APIRouter, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
+from app.core.config.settings import settings
 from app.core.exceptions import (
     AppException,
     BadRequestException,
@@ -38,6 +40,14 @@ from app.modules.auth.routers.auth_router import (
 app = FastAPI(
     title="MobileERP API",
     version="0.1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.api.cors_origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -86,12 +96,16 @@ async def integrity_error_handler(_: Request, exc: IntegrityError):
 async def health_check():
     return {"status": "ok"}
 
-app.include_router(product_router)
-app.include_router(brand_router)
-app.include_router(category_router)
-app.include_router(inventory_router)
-app.include_router(supplier_router)
-app.include_router(purchase_router)
-app.include_router(customer_router)
-app.include_router(sale_router)
-app.include_router(auth_router)
+api_router = APIRouter(prefix=settings.api.prefix)
+
+api_router.include_router(product_router)
+api_router.include_router(brand_router)
+api_router.include_router(category_router)
+api_router.include_router(inventory_router)
+api_router.include_router(supplier_router)
+api_router.include_router(purchase_router)
+api_router.include_router(customer_router)
+api_router.include_router(sale_router)
+api_router.include_router(auth_router)
+
+app.include_router(api_router)
