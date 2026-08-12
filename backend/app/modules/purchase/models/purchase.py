@@ -51,6 +51,7 @@ class Purchase(
     purchase_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
+        index=True,
     )
 
     total_cost: Mapped[Decimal] = mapped_column(
