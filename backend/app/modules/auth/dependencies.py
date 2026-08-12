@@ -9,6 +9,9 @@ from app.modules.auth.models.user import User
 from app.modules.auth.repositories.user_repository import UserRepository
 from app.modules.auth.security.jwt_handler import JWTHandler
 from app.modules.auth.services.auth_service import AuthService
+from app.modules.auth.services.permission_service import PermissionService
+from app.modules.auth.services.role_service import RoleService
+from app.modules.auth.services.user_service import UserService
 
 _INVALID_CREDENTIALS_MESSAGE = "Could not validate credentials."
 _FORBIDDEN_MESSAGE = "You do not have permission to perform this action."
@@ -23,6 +26,24 @@ def get_auth_service(
     session: AsyncSession = Depends(get_session),
 ) -> AuthService:
     return AuthService(session)
+
+
+def get_user_service(
+    session: AsyncSession = Depends(get_session),
+) -> UserService:
+    return UserService(session)
+
+
+def get_role_service(
+    session: AsyncSession = Depends(get_session),
+) -> RoleService:
+    return RoleService(session)
+
+
+def get_permission_service(
+    session: AsyncSession = Depends(get_session),
+) -> PermissionService:
+    return PermissionService(session)
 
 
 async def get_current_user(

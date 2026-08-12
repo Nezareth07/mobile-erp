@@ -36,6 +36,15 @@ from app.modules.sale.routers.sale_router import (
 from app.modules.auth.routers.auth_router import (
     router as auth_router,
 )
+from app.modules.auth.routers.user_router import (
+    router as user_router,
+)
+from app.modules.auth.routers.role_router import (
+    router as role_router,
+)
+from app.modules.auth.routers.permission_router import (
+    router as permission_router,
+)
 
 app = FastAPI(
     title="MobileERP API",
@@ -107,5 +116,8 @@ api_router.include_router(purchase_router)
 api_router.include_router(customer_router)
 api_router.include_router(sale_router)
 api_router.include_router(auth_router)
+api_router.include_router(user_router)
+api_router.include_router(role_router)
+api_router.include_router(permission_router)
 
 app.include_router(api_router)

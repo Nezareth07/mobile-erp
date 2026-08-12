@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
+    BadRequestException,
     ConflictException,
     NotFoundException,
 )
@@ -93,6 +94,11 @@ class RoleService:
     ) -> None:
 
         role = await self.get_role(role_id)
+
+        if await self.repository.has_active_users(role_id):
+            raise BadRequestException(
+                "Cannot deactivate a role that has active users assigned."
+            )
 
         role.is_active = False
 

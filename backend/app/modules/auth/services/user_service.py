@@ -27,6 +27,12 @@ ADMIN_ROLE_NAME = "ADMIN"
 # para ningun otro pg_advisory_xact_lock del sistema.
 _BOOTSTRAP_ADMIN_LOCK_KEY = crc32(b"mobileerp:bootstrap_admin")
 
+# Clave separada para el advisory lock que serializa cualquier operacion que
+# pueda dejar al sistema sin un usuario ADMIN activo (deactivate_user,
+# assign_roles). Distinta de _BOOTSTRAP_ADMIN_LOCK_KEY a proposito -- son
+# invariantes distintas y no deben competir por el mismo lock.
+_ADMIN_LOCKOUT_LOCK_KEY = crc32(b"mobileerp:admin_lockout_guard")
+
 
 class UserService:
     def __init__(
@@ -111,6 +117,9 @@ class UserService:
 
         user = await self.get_user(user_id)
 
+        if self._has_active_admin_role(user):
+            await self._ensure_not_last_active_admin()
+
         user.is_active = False
 
         await self.session.commit()
@@ -143,6 +152,15 @@ class UserService:
 
         roles = await self._resolve_roles(data.role_ids)
 
+        was_active_admin = self._has_active_admin_role(user)
+        will_be_active_admin = any(
+            role.name == ADMIN_ROLE_NAME and role.is_active
+            for role in roles
+        )
+
+        if was_active_admin and not will_be_active_admin:
+            await self._ensure_not_last_active_admin()
+
         user.roles = roles
 
         await self.session.flush()
@@ -150,6 +168,42 @@ class UserService:
         await self.session.commit()
 
         return await self.get_user(user_id)
+
+    def _has_active_admin_role(
+        self,
+        user: User,
+    ) -> bool:
+        return any(
+            role.name == ADMIN_ROLE_NAME and role.is_active
+            for role in user.roles
+        )
+
+    async def _ensure_not_last_active_admin(
+        self,
+    ) -> None:
+        """Serializa contra otras operaciones que puedan afectar la
+        membresia de ADMIN y verifica que, tras esta operacion, siga
+        quedando al menos un usuario ADMIN activo.
+
+        Solo se llama cuando el usuario afectado es ADMIN activo -- no en
+        cada deactivate_user/assign_roles, unicamente en el camino donde
+        el invariante esta realmente en riesgo.
+        """
+        await self.session.execute(
+            text("SELECT pg_advisory_xact_lock(CAST(:key AS BIGINT))").bindparams(
+                key=_ADMIN_LOCKOUT_LOCK_KEY
+            )
+        )
+
+        active_admins = await self.repository.count_active_users_with_role(
+            ADMIN_ROLE_NAME
+        )
+
+        if active_admins <= 1:
+            raise BadRequestException(
+                "This operation would leave the system without any active "
+                "ADMIN user."
+            )
 
     async def _resolve_roles(
         self,

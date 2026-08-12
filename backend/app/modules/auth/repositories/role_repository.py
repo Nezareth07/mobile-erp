@@ -1,11 +1,13 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.repositories.base_repository import BaseRepository
 from app.modules.auth.models.role import Role
+from app.modules.auth.models.user import User
+from app.modules.auth.models.user_role import UserRole
 
 
 class RoleRepository(BaseRepository[Role]):
@@ -72,3 +74,21 @@ class RoleRepository(BaseRepository[Role]):
         result = await self.session.execute(query)
 
         return list(result.scalars().all())
+
+    async def has_active_users(
+        self,
+        role_id: UUID,
+    ) -> bool:
+        query = (
+            select(func.count())
+            .select_from(User)
+            .join(UserRole, UserRole.user_id == User.id)
+            .where(
+                UserRole.role_id == role_id,
+                User.is_active.is_(True),
+            )
+        )
+
+        result = await self.session.execute(query)
+
+        return result.scalar_one() > 0

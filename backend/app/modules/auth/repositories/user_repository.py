@@ -1,12 +1,13 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.repositories.base_repository import BaseRepository
 from app.modules.auth.models.role import Role
 from app.modules.auth.models.user import User
+from app.modules.auth.models.user_role import UserRole
 
 
 class UserRepository(BaseRepository[User]):
@@ -63,3 +64,23 @@ class UserRepository(BaseRepository[User]):
         result = await self.session.execute(query)
 
         return list(result.scalars().all())
+
+    async def count_active_users_with_role(
+        self,
+        role_name: str,
+    ) -> int:
+        query = (
+            select(func.count(func.distinct(User.id)))
+            .select_from(User)
+            .join(UserRole, UserRole.user_id == User.id)
+            .join(Role, Role.id == UserRole.role_id)
+            .where(
+                User.is_active.is_(True),
+                Role.name == role_name,
+                Role.is_active.is_(True),
+            )
+        )
+
+        result = await self.session.execute(query)
+
+        return result.scalar_one()
