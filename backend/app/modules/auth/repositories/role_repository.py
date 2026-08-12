@@ -75,6 +75,35 @@ class RoleRepository(BaseRepository[Role]):
 
         return list(result.scalars().all())
 
+    async def get_for_update(
+        self,
+        role_id: UUID,
+    ) -> Role | None:
+        query = (
+            select(Role)
+            .where(Role.id == role_id)
+            .with_for_update()
+        )
+
+        result = await self.session.execute(query)
+
+        return result.scalar_one_or_none()
+
+    async def get_by_ids_for_update(
+        self,
+        role_ids: list[UUID],
+    ) -> list[Role]:
+        query = (
+            select(Role)
+            .where(Role.id.in_(role_ids))
+            .order_by(Role.id)
+            .with_for_update()
+        )
+
+        result = await self.session.execute(query)
+
+        return list(result.scalars().all())
+
     async def has_active_users(
         self,
         role_id: UUID,

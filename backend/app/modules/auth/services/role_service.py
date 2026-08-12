@@ -93,7 +93,10 @@ class RoleService:
         role_id: UUID,
     ) -> None:
 
-        role = await self.get_role(role_id)
+        role = await self.repository.get_for_update(role_id)
+
+        if role is None:
+            raise NotFoundException("Role not found.")
 
         if await self.repository.has_active_users(role_id):
             raise BadRequestException(

@@ -213,7 +213,7 @@ class UserService:
         if not role_ids:
             return []
 
-        roles = await self.role_repository.get_by_ids(role_ids)
+        roles = await self.role_repository.get_by_ids_for_update(role_ids)
 
         missing = set(role_ids) - {r.id for r in roles}
 
