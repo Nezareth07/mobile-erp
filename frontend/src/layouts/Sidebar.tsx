@@ -21,17 +21,20 @@ interface NavItem {
   icon: ComponentType<{ size?: number; className?: string; 'aria-hidden'?: boolean }>
 }
 
-// 'dashboard' is wired to a real route (`/`) below and rendered as a
-// NavLink; the rest are still placeholders (no page exists yet) rendered
-// as non-navigable buttons with local active-state highlighting.
-const DASHBOARD_ITEM: NavItem = {
-  id: 'dashboard',
-  label: 'Dashboard',
-  icon: LayoutDashboard,
+interface LinkedNavItem extends NavItem {
+  to: string
+  end?: boolean
 }
 
+// 'dashboard' and 'catalogo' are wired to real routes and rendered as
+// NavLinks; the rest are still placeholders (no page exists yet) rendered
+// as non-navigable buttons with local active-state highlighting.
+const LINKED_NAV_ITEMS: LinkedNavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/', end: true },
+  { id: 'catalogo', label: 'Catálogo', icon: Package, to: '/catalogo' },
+]
+
 const PLACEHOLDER_NAV_ITEMS: NavItem[] = [
-  { id: 'catalogo', label: 'Catálogo', icon: Package },
   { id: 'inventario', label: 'Inventario', icon: Boxes },
   { id: 'compras', label: 'Compras', icon: ShoppingCart },
   { id: 'ventas', label: 'Ventas', icon: Receipt },
@@ -116,19 +119,23 @@ export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) 
         </div>
 
         <ul className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
-          <li>
-            <NavLink
-              to="/"
-              end
-              title={collapsed ? DASHBOARD_ITEM.label : undefined}
-              className={({ isActive }) => navItemClasses(isActive, collapsed)}
-            >
-              <DASHBOARD_ITEM.icon size={20} className="shrink-0" aria-hidden={true} />
-              <span className={cn(collapsed && 'md:hidden')}>
-                {DASHBOARD_ITEM.label}
-              </span>
-            </NavLink>
-          </li>
+          {LINKED_NAV_ITEMS.map((item) => (
+            <li key={item.id}>
+              <NavLink
+                to={item.to}
+                end={item.end}
+                title={collapsed ? item.label : undefined}
+                className={({ isActive }) =>
+                  navItemClasses(isActive, collapsed)
+                }
+              >
+                <item.icon size={20} className="shrink-0" aria-hidden={true} />
+                <span className={cn(collapsed && 'md:hidden')}>
+                  {item.label}
+                </span>
+              </NavLink>
+            </li>
+          ))}
 
           {PLACEHOLDER_NAV_ITEMS.map((item) => {
             const isActive = item.id === activeId

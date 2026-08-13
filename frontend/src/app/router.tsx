@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '../auth/AuthContext'
 import { ProtectedRoute } from '../auth/ProtectedRoute'
 import { AppLayout } from '../layouts/AppLayout'
@@ -6,6 +6,10 @@ import { LoginPage } from '../pages/LoginPage'
 import { HomePage } from '../pages/HomePage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
+import { CatalogLayout } from '../features/catalog/CatalogLayout'
+import { ProductsPage } from '../features/catalog/ProductsPage'
+import { BrandsPage } from '../features/catalog/BrandsPage'
+import { CategoriesPage } from '../features/catalog/CategoriesPage'
 
 export function AppRouter() {
   return (
@@ -33,6 +37,24 @@ export function AppRouter() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/catalogo"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <CatalogLayout />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route
+              index
+              element={<Navigate to="/catalogo/productos" replace />}
+            />
+            <Route path="productos" element={<ProductsPage />} />
+            <Route path="marcas" element={<BrandsPage />} />
+            <Route path="categorias" element={<CategoriesPage />} />
+          </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
