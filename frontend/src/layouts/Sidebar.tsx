@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ComponentType } from 'react'
+import { NavLink } from 'react-router-dom'
 import {
   BarChart3,
   Boxes,
@@ -20,8 +21,16 @@ interface NavItem {
   icon: ComponentType<{ size?: number; className?: string; 'aria-hidden'?: boolean }>
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+// 'dashboard' is wired to a real route (`/`) below and rendered as a
+// NavLink; the rest are still placeholders (no page exists yet) rendered
+// as non-navigable buttons with local active-state highlighting.
+const DASHBOARD_ITEM: NavItem = {
+  id: 'dashboard',
+  label: 'Dashboard',
+  icon: LayoutDashboard,
+}
+
+const PLACEHOLDER_NAV_ITEMS: NavItem[] = [
   { id: 'catalogo', label: 'Catálogo', icon: Package },
   { id: 'inventario', label: 'Inventario', icon: Boxes },
   { id: 'compras', label: 'Compras', icon: ShoppingCart },
@@ -38,8 +47,20 @@ export interface SidebarProps {
   onCloseMobile: () => void
 }
 
+const navItemClasses = (isActive: boolean, collapsed: boolean) =>
+  cn(
+    'flex w-full items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+    isActive
+      ? 'border-primary bg-primary-subtle text-primary'
+      : 'border-transparent text-ink-muted hover:bg-canvas hover:text-ink',
+    collapsed && 'md:justify-center',
+  )
+
 export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) {
-  const [activeId, setActiveId] = useState(NAV_ITEMS[0].id)
+  // No placeholder item has a real page yet, so none starts "active" --
+  // 'dashboard' is no longer part of this state, it's a real NavLink now.
+  const [activeId, setActiveId] = useState<string | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -95,7 +116,21 @@ export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) 
         </div>
 
         <ul className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
-          {NAV_ITEMS.map((item) => {
+          <li>
+            <NavLink
+              to="/"
+              end
+              title={collapsed ? DASHBOARD_ITEM.label : undefined}
+              className={({ isActive }) => navItemClasses(isActive, collapsed)}
+            >
+              <DASHBOARD_ITEM.icon size={20} className="shrink-0" aria-hidden={true} />
+              <span className={cn(collapsed && 'md:hidden')}>
+                {DASHBOARD_ITEM.label}
+              </span>
+            </NavLink>
+          </li>
+
+          {PLACEHOLDER_NAV_ITEMS.map((item) => {
             const isActive = item.id === activeId
             const Icon = item.icon
 
@@ -106,14 +141,7 @@ export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) 
                   title={collapsed ? item.label : undefined}
                   aria-current={isActive ? 'page' : undefined}
                   onClick={() => setActiveId(item.id)}
-                  className={cn(
-                    'flex w-full items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-                    isActive
-                      ? 'border-primary bg-primary-subtle text-primary'
-                      : 'border-transparent text-ink-muted hover:bg-canvas hover:text-ink',
-                    collapsed && 'md:justify-center',
-                  )}
+                  className={navItemClasses(isActive, collapsed)}
                 >
                   <Icon size={20} className="shrink-0" aria-hidden={true} />
                   <span className={cn(collapsed && 'md:hidden')}>

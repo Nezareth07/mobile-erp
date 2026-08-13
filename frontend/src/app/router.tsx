@@ -5,6 +5,7 @@ import { AppLayout } from '../layouts/AppLayout'
 import { LoginPage } from '../pages/LoginPage'
 import { HomePage } from '../pages/HomePage'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { DashboardPage } from '../features/dashboard/DashboardPage'
 
 export function AppRouter() {
   return (
@@ -14,6 +15,16 @@ export function AppRouter() {
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <DashboardPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/_showcase"
             element={
               <ProtectedRoute>
                 <AppLayout>
