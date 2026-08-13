@@ -10,6 +10,7 @@ import { CatalogLayout } from '../features/catalog/CatalogLayout'
 import { ProductsPage } from '../features/catalog/ProductsPage'
 import { BrandsPage } from '../features/catalog/BrandsPage'
 import { CategoriesPage } from '../features/catalog/CategoriesPage'
+import { SuppliersPage } from '../features/suppliers/SuppliersPage'
 
 export function AppRouter() {
   return (
@@ -55,6 +56,16 @@ export function AppRouter() {
             <Route path="marcas" element={<BrandsPage />} />
             <Route path="categorias" element={<CategoriesPage />} />
           </Route>
+          <Route
+            path="/proveedores"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <SuppliersPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
