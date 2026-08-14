@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { ComponentType } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
@@ -15,22 +15,16 @@ import {
 } from 'lucide-react'
 import { cn } from '../lib/cn'
 
-interface NavItem {
+interface LinkedNavItem {
   id: string
   label: string
   icon: ComponentType<{ size?: number; className?: string; 'aria-hidden'?: boolean }>
-}
-
-interface LinkedNavItem extends NavItem {
   to: string
   end?: boolean
 }
 
-// 'dashboard', 'catalogo', 'proveedores', 'inventario', 'clientes',
-// 'compras', 'ventas' and 'administracion' are wired to real routes and
-// rendered as NavLinks; the rest are still placeholders (no page exists
-// yet) rendered as non-navigable buttons with local active-state
-// highlighting.
+// Every item is wired to a real route and rendered as a NavLink. 'reportes'
+// (F12) was the last placeholder -- no non-navigable buttons remain.
 const LINKED_NAV_ITEMS: LinkedNavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/', end: true },
   { id: 'catalogo', label: 'Catálogo', icon: Package, to: '/catalogo' },
@@ -45,10 +39,7 @@ const LINKED_NAV_ITEMS: LinkedNavItem[] = [
     icon: ShieldCheck,
     to: '/administracion',
   },
-]
-
-const PLACEHOLDER_NAV_ITEMS: NavItem[] = [
-  { id: 'reportes', label: 'Reportes', icon: BarChart3 },
+  { id: 'reportes', label: 'Reportes', icon: BarChart3, to: '/reportes' },
 ]
 
 export interface SidebarProps {
@@ -68,9 +59,6 @@ const navItemClasses = (isActive: boolean, collapsed: boolean) =>
   )
 
 export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) {
-  // No placeholder item has a real page yet, so none starts "active" --
-  // 'dashboard' is no longer part of this state, it's a real NavLink now.
-  const [activeId, setActiveId] = useState<string | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -143,28 +131,6 @@ export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) 
               </NavLink>
             </li>
           ))}
-
-          {PLACEHOLDER_NAV_ITEMS.map((item) => {
-            const isActive = item.id === activeId
-            const Icon = item.icon
-
-            return (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  title={collapsed ? item.label : undefined}
-                  aria-current={isActive ? 'page' : undefined}
-                  onClick={() => setActiveId(item.id)}
-                  className={navItemClasses(isActive, collapsed)}
-                >
-                  <Icon size={20} className="shrink-0" aria-hidden={true} />
-                  <span className={cn(collapsed && 'md:hidden')}>
-                    {item.label}
-                  </span>
-                </button>
-              </li>
-            )
-          })}
         </ul>
       </nav>
     </>

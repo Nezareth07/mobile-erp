@@ -26,6 +26,9 @@ import { AdministrationLayout } from '../features/administration/AdministrationL
 import { UsersPage } from '../features/administration/UsersPage'
 import { RolesPage } from '../features/administration/RolesPage'
 import { PermissionsPage } from '../features/administration/PermissionsPage'
+import { ReportsLayout } from '../features/reports/ReportsLayout'
+import { SalesReportPage } from '../features/reports/SalesReportPage'
+import { PurchasesReportPage } from '../features/reports/PurchasesReportPage'
 
 export function AppRouter() {
   return (
@@ -191,6 +194,20 @@ export function AppRouter() {
             <Route path="usuarios" element={<UsersPage />} />
             <Route path="roles" element={<RolesPage />} />
             <Route path="permisos" element={<PermissionsPage />} />
+          </Route>
+          <Route
+            path="/reportes"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <ReportsLayout />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/reportes/ventas" replace />} />
+            <Route path="ventas" element={<SalesReportPage />} />
+            <Route path="compras" element={<PurchasesReportPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

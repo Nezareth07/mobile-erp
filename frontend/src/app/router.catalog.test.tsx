@@ -58,20 +58,16 @@ describe('AppRouter -- /catalogo', () => {
     ).toBeInTheDocument()
   })
 
-  it('exposes Catálogo as a real Sidebar link, distinct from the placeholder buttons', async () => {
+  it('exposes Catálogo as a real Sidebar link', async () => {
     renderAt('/catalogo/productos')
 
     await screen.findByText('No hay productos todavía')
     const catalogLink = screen.getByRole('link', { name: 'Catálogo' })
     expect(catalogLink).toHaveAttribute('href', '/catalogo')
 
-    // Placeholder items (e.g. Reportes) are still plain buttons, not links.
-    // Inventario (F5->F7) and Compras (F5->F9) were both placeholders when
-    // this test was written or last touched; each became a real route in
-    // a later phase, so neither is a valid example here anymore.
-    expect(
-      screen.queryByRole('link', { name: 'Reportes' }),
-    ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reportes' })).toBeInTheDocument()
+    // Reportes (F12) was the last placeholder; it is now a real link too,
+    // so the Sidebar has no non-navigable buttons left to contrast against.
+    const reportsLink = screen.getByRole('link', { name: 'Reportes' })
+    expect(reportsLink).toHaveAttribute('href', '/reportes')
   })
 })

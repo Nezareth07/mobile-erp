@@ -71,8 +71,9 @@ describe('AppRouter', () => {
       ).toBeInTheDocument()
     })
 
-    // The Sidebar has no nav item pointing at /_showcase -- only Dashboard
-    // is a real link, everything else is an unwired placeholder button.
+    // The Sidebar has no nav item pointing at /_showcase -- every Sidebar
+    // item is wired to a real route (F12 wired the last one, Reportes),
+    // and none of them points here.
     expect(
       screen.queryByRole('link', { name: /application shell/i }),
     ).not.toBeInTheDocument()

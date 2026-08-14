@@ -67,17 +67,17 @@ describe('AppRouter -- /administracion', () => {
     ).toBeInTheDocument()
   })
 
-  it('exposes Administración as a real Sidebar link, distinct from the placeholder buttons', async () => {
+  it('exposes Administración as a real Sidebar link', async () => {
     renderAt('/administracion')
 
     await screen.findByText('No hay usuarios todavía')
     const adminLink = screen.getByRole('link', { name: 'Administración' })
     expect(adminLink).toHaveAttribute('href', '/administracion')
 
-    expect(
-      screen.queryByRole('link', { name: 'Reportes' }),
-    ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reportes' })).toBeInTheDocument()
+    // Reportes (F12) was the last placeholder; it is now a real link too,
+    // so the Sidebar has no non-navigable buttons left to contrast against.
+    const reportsLink = screen.getByRole('link', { name: 'Reportes' })
+    expect(reportsLink).toHaveAttribute('href', '/reportes')
   })
 
   it('marks the Administración link and Usuarios tab as active', async () => {

@@ -33,19 +33,17 @@ describe('AppRouter -- /clientes', () => {
     ).toBeInTheDocument()
   })
 
-  it('exposes Clientes as a real Sidebar link, distinct from the placeholder buttons', async () => {
+  it('exposes Clientes as a real Sidebar link', async () => {
     renderAt('/clientes')
 
     await screen.findByText('No hay clientes todavía')
     const customersLink = screen.getByRole('link', { name: 'Clientes' })
     expect(customersLink).toHaveAttribute('href', '/clientes')
 
-    // Ventas was a placeholder when this test was written (F8); F10 wired
-    // it to a real route, so it is no longer a valid example here.
-    expect(
-      screen.queryByRole('link', { name: 'Reportes' }),
-    ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reportes' })).toBeInTheDocument()
+    // Reportes (F12) was the last placeholder; it is now a real link too,
+    // so the Sidebar has no non-navigable buttons left to contrast against.
+    const reportsLink = screen.getByRole('link', { name: 'Reportes' })
+    expect(reportsLink).toHaveAttribute('href', '/reportes')
   })
 
   it('marks the Clientes link as active when on /clientes', async () => {
