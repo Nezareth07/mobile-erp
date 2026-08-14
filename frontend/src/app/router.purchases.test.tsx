@@ -78,13 +78,12 @@ describe('AppRouter -- /compras', () => {
     const purchasesLink = screen.getByRole('link', { name: 'Compras' })
     expect(purchasesLink).toHaveAttribute('href', '/compras')
 
-    // Ventas was a placeholder when router.suppliers.test.tsx (F6) and
-    // router.customers.test.tsx (F8) picked it as their example, and it
-    // still is here -- F9 only wires Compras, not Ventas.
+    // Ventas was a placeholder when this test was written (F9); F10 wired
+    // it to a real route, so it is no longer a valid example here.
     expect(
-      screen.queryByRole('link', { name: 'Ventas' }),
+      screen.queryByRole('link', { name: 'Reportes' }),
     ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Ventas' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reportes' })).toBeInTheDocument()
   })
 
   it('marks the Compras link as active when on /compras', async () => {

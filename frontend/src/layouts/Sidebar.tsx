@@ -26,10 +26,10 @@ interface LinkedNavItem extends NavItem {
   end?: boolean
 }
 
-// 'dashboard', 'catalogo', 'proveedores', 'inventario', 'clientes' and
-// 'compras' are wired to real routes and rendered as NavLinks; the rest
-// are still placeholders (no page exists yet) rendered as non-navigable
-// buttons with local active-state highlighting.
+// 'dashboard', 'catalogo', 'proveedores', 'inventario', 'clientes',
+// 'compras' and 'ventas' are wired to real routes and rendered as
+// NavLinks; the rest are still placeholders (no page exists yet)
+// rendered as non-navigable buttons with local active-state highlighting.
 const LINKED_NAV_ITEMS: LinkedNavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/', end: true },
   { id: 'catalogo', label: 'Catálogo', icon: Package, to: '/catalogo' },
@@ -37,10 +37,10 @@ const LINKED_NAV_ITEMS: LinkedNavItem[] = [
   { id: 'inventario', label: 'Inventario', icon: Boxes, to: '/inventario' },
   { id: 'clientes', label: 'Clientes', icon: Users, to: '/clientes' },
   { id: 'compras', label: 'Compras', icon: ShoppingCart, to: '/compras' },
+  { id: 'ventas', label: 'Ventas', icon: Receipt, to: '/ventas' },
 ]
 
 const PLACEHOLDER_NAV_ITEMS: NavItem[] = [
-  { id: 'ventas', label: 'Ventas', icon: Receipt },
   { id: 'reportes', label: 'Reportes', icon: BarChart3 },
   { id: 'administracion', label: 'Administración', icon: ShieldCheck },
 ]

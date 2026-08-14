@@ -19,6 +19,9 @@ import { CustomersPage } from '../features/customers/CustomersPage'
 import { PurchasesPage } from '../features/purchases/PurchasesPage'
 import { NewPurchasePage } from '../features/purchases/NewPurchasePage'
 import { PurchaseDetailPage } from '../features/purchases/PurchaseDetailPage'
+import { SalesPage } from '../features/sales/SalesPage'
+import { NewSalePage } from '../features/sales/NewSalePage'
+import { SaleDetailPage } from '../features/sales/SaleDetailPage'
 
 export function AppRouter() {
   return (
@@ -133,6 +136,36 @@ export function AppRouter() {
               <ProtectedRoute>
                 <AppLayout>
                   <PurchaseDetailPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ventas"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <SalesPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ventas/nueva"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <NewSalePage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ventas/:saleId"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <SaleDetailPage />
                 </AppLayout>
               </ProtectedRoute>
             }
