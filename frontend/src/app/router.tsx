@@ -16,6 +16,9 @@ import { InventoryPage } from '../features/inventory/InventoryPage'
 import { MovementsPage } from '../features/inventory/MovementsPage'
 import { ProductStockPage } from '../features/inventory/ProductStockPage'
 import { CustomersPage } from '../features/customers/CustomersPage'
+import { PurchasesPage } from '../features/purchases/PurchasesPage'
+import { NewPurchasePage } from '../features/purchases/NewPurchasePage'
+import { PurchaseDetailPage } from '../features/purchases/PurchaseDetailPage'
 
 export function AppRouter() {
   return (
@@ -100,6 +103,36 @@ export function AppRouter() {
               <ProtectedRoute>
                 <AppLayout>
                   <CustomersPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compras"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <PurchasesPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compras/nueva"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <NewPurchasePage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compras/:purchaseId"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <PurchaseDetailPage />
                 </AppLayout>
               </ProtectedRoute>
             }
