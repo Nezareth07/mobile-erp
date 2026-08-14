@@ -22,6 +22,10 @@ import { PurchaseDetailPage } from '../features/purchases/PurchaseDetailPage'
 import { SalesPage } from '../features/sales/SalesPage'
 import { NewSalePage } from '../features/sales/NewSalePage'
 import { SaleDetailPage } from '../features/sales/SaleDetailPage'
+import { AdministrationLayout } from '../features/administration/AdministrationLayout'
+import { UsersPage } from '../features/administration/UsersPage'
+import { RolesPage } from '../features/administration/RolesPage'
+import { PermissionsPage } from '../features/administration/PermissionsPage'
 
 export function AppRouter() {
   return (
@@ -170,6 +174,24 @@ export function AppRouter() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/administracion"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <AdministrationLayout />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route
+              index
+              element={<Navigate to="/administracion/usuarios" replace />}
+            />
+            <Route path="usuarios" element={<UsersPage />} />
+            <Route path="roles" element={<RolesPage />} />
+            <Route path="permisos" element={<PermissionsPage />} />
+          </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>

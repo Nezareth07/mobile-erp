@@ -12,6 +12,7 @@ const mockedUseAuth = vi.mocked(useAuth)
 function renderWithStatus(status: AuthStatus) {
   mockedUseAuth.mockReturnValue({
     status,
+    userId: null,
     login: vi.fn(),
     logout: vi.fn(),
   } satisfies AuthContextValue)

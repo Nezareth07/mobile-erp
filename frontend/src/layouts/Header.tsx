@@ -1,6 +1,8 @@
-import { LogOut, Menu, PanelLeft, User } from 'lucide-react'
+import { useState } from 'react'
+import { KeyRound, LogOut, Menu, PanelLeft, User } from 'lucide-react'
 import type { RefObject } from 'react'
 import { useAuth } from '../auth/useAuth'
+import { ChangePasswordDialog } from '../features/account/ChangePasswordDialog'
 
 export interface HeaderProps {
   collapsed: boolean
@@ -16,6 +18,8 @@ export function Header({
   mobileMenuTriggerRef,
 }: HeaderProps) {
   const { logout } = useAuth()
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false)
+
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-line bg-surface px-4">
       <div className="flex items-center gap-2">
@@ -48,6 +52,14 @@ export function Header({
         </span>
         <button
           type="button"
+          onClick={() => setChangePasswordOpen(true)}
+          aria-label="Cambiar contraseña"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-ink-muted hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        >
+          <KeyRound size={18} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
           onClick={logout}
           aria-label="Cerrar sesión"
           className="inline-flex h-9 w-9 items-center justify-center rounded-md text-ink-muted hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
@@ -55,6 +67,11 @@ export function Header({
           <LogOut size={18} aria-hidden="true" />
         </button>
       </div>
+
+      <ChangePasswordDialog
+        open={changePasswordOpen}
+        onClose={() => setChangePasswordOpen(false)}
+      />
     </header>
   )
 }
