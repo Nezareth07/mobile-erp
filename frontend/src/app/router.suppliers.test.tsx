@@ -43,10 +43,12 @@ describe('AppRouter -- /proveedores', () => {
     const suppliersLink = screen.getByRole('link', { name: 'Proveedores' })
     expect(suppliersLink).toHaveAttribute('href', '/proveedores')
 
+    // Clientes was a placeholder when this test was written (F6); F8 wired
+    // it to a real route, so it is no longer a valid example here.
     expect(
-      screen.queryByRole('link', { name: 'Clientes' }),
+      screen.queryByRole('link', { name: 'Ventas' }),
     ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Clientes' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ventas' })).toBeInTheDocument()
   })
 
   it('marks the Proveedores link as active when on /proveedores', async () => {

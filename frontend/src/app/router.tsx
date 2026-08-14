@@ -15,6 +15,7 @@ import { InventoryLayout } from '../features/inventory/InventoryLayout'
 import { InventoryPage } from '../features/inventory/InventoryPage'
 import { MovementsPage } from '../features/inventory/MovementsPage'
 import { ProductStockPage } from '../features/inventory/ProductStockPage'
+import { CustomersPage } from '../features/customers/CustomersPage'
 
 export function AppRouter() {
   return (
@@ -89,6 +90,16 @@ export function AppRouter() {
               <ProtectedRoute>
                 <AppLayout>
                   <ProductStockPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clientes"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <CustomersPage />
                 </AppLayout>
               </ProtectedRoute>
             }
