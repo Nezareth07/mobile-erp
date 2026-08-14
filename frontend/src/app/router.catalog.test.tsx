@@ -65,10 +65,12 @@ describe('AppRouter -- /catalogo', () => {
     const catalogLink = screen.getByRole('link', { name: 'Catálogo' })
     expect(catalogLink).toHaveAttribute('href', '/catalogo')
 
-    // Placeholder items (e.g. Inventario) are still plain buttons, not links.
+    // Placeholder items (e.g. Compras) are still plain buttons, not links.
+    // Inventario was a placeholder when this test was written (F5); F7
+    // wired it to a real route, so it is no longer a valid example here.
     expect(
-      screen.queryByRole('link', { name: 'Inventario' }),
+      screen.queryByRole('link', { name: 'Compras' }),
     ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Inventario' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Compras' })).toBeInTheDocument()
   })
 })

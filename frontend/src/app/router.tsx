@@ -11,6 +11,10 @@ import { ProductsPage } from '../features/catalog/ProductsPage'
 import { BrandsPage } from '../features/catalog/BrandsPage'
 import { CategoriesPage } from '../features/catalog/CategoriesPage'
 import { SuppliersPage } from '../features/suppliers/SuppliersPage'
+import { InventoryLayout } from '../features/inventory/InventoryLayout'
+import { InventoryPage } from '../features/inventory/InventoryPage'
+import { MovementsPage } from '../features/inventory/MovementsPage'
+import { ProductStockPage } from '../features/inventory/ProductStockPage'
 
 export function AppRouter() {
   return (
@@ -62,6 +66,29 @@ export function AppRouter() {
               <ProtectedRoute>
                 <AppLayout>
                   <SuppliersPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventario"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <InventoryLayout />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<InventoryPage />} />
+            <Route path="movimientos" element={<MovementsPage />} />
+          </Route>
+          <Route
+            path="/inventario/:productId"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <ProductStockPage />
                 </AppLayout>
               </ProtectedRoute>
             }

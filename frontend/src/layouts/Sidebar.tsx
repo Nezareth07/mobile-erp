@@ -26,18 +26,18 @@ interface LinkedNavItem extends NavItem {
   end?: boolean
 }
 
-// 'dashboard', 'catalogo' and 'proveedores' are wired to real routes and
-// rendered as NavLinks; the rest are still placeholders (no page exists
-// yet) rendered as non-navigable buttons with local active-state
-// highlighting.
+// 'dashboard', 'catalogo', 'proveedores' and 'inventario' are wired to
+// real routes and rendered as NavLinks; the rest are still placeholders
+// (no page exists yet) rendered as non-navigable buttons with local
+// active-state highlighting.
 const LINKED_NAV_ITEMS: LinkedNavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/', end: true },
   { id: 'catalogo', label: 'Catálogo', icon: Package, to: '/catalogo' },
   { id: 'proveedores', label: 'Proveedores', icon: Truck, to: '/proveedores' },
+  { id: 'inventario', label: 'Inventario', icon: Boxes, to: '/inventario' },
 ]
 
 const PLACEHOLDER_NAV_ITEMS: NavItem[] = [
-  { id: 'inventario', label: 'Inventario', icon: Boxes },
   { id: 'compras', label: 'Compras', icon: ShoppingCart },
   { id: 'ventas', label: 'Ventas', icon: Receipt },
   { id: 'clientes', label: 'Clientes', icon: Users },
