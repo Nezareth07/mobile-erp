@@ -47,10 +47,27 @@ class CategoryService:
         data: CategoryCreate,
     ) -> Category:
 
-        if await self.repository.name_exists(data.name):
-            raise ConflictException(
-                "Category already exists."
-            )
+        existing = await self.repository.get_by_name(data.name)
+
+        if existing is not None:
+            if existing.is_active:
+                raise ConflictException(
+                    "Category already exists."
+                )
+
+            # revive-on-create: la categoria fue desactivada (soft-delete)
+            # y ahora se vuelve a crear con el mismo nombre. Se reactiva la
+            # fila existente en vez de insertar otra, conservando su UUID y
+            # todas sus relaciones historicas (product.category_id sigue
+            # apuntando al mismo registro). La comparacion de nombre es la
+            # misma de get_by_name (igualdad exacta, sin normalizacion).
+            existing.is_active = True
+
+            await self.session.commit()
+
+            await self.session.refresh(existing)
+
+            return existing
 
         category = Category(
             name=data.name,

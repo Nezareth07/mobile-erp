@@ -48,8 +48,28 @@ class SupplierService:
         data: SupplierCreate,
     ) -> Supplier:
 
-        if await self.repository.name_exists(data.name):
-            raise ConflictException("Supplier already exists.")
+        existing = await self.repository.get_by_name(data.name)
+
+        if existing is not None:
+            if existing.is_active:
+                raise ConflictException("Supplier already exists.")
+
+            # revive-on-create: el proveedor fue desactivado (soft-delete)
+            # y ahora se vuelve a crear con el mismo nombre. Se reactiva la
+            # fila existente en vez de insertar otra, conservando su UUID y
+            # todas sus relaciones historicas (purchase.supplier_id sigue
+            # apuntando al mismo registro). Solo se cambia is_active: los
+            # demas campos del payload (tax_id, contacto, etc.) NO se
+            # aplican aqui; para editarlos se usa PUT /suppliers/{id}. La
+            # comparacion de nombre es la misma de get_by_name (igualdad
+            # exacta, sin normalizacion).
+            existing.is_active = True
+
+            await self.session.commit()
+
+            await self.session.refresh(existing)
+
+            return existing
 
         if data.tax_id and await self.repository.tax_id_exists(data.tax_id):
             raise ConflictException("Tax ID already registered.")
