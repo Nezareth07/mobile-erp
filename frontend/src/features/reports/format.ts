@@ -1,13 +1,7 @@
-// Deliberately duplicated from features/dashboard/format.ts / features/
-// inventory/format.ts rather than shared -- both are closed, committed
-// phases and the working rule is not to modify a closed phase without a
-// real blocking bug.
-
-const currencyFormatter = new Intl.NumberFormat('es-419', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 2,
-})
+// Monetary formatting is centralized in src/lib/money.ts so the whole app
+// shows Colombian pesos (COP) consistently. Re-exported here to keep this
+// module's public API (formatCurrency) stable for existing callers.
+export { formatCurrency } from '../../lib/money'
 
 const percentFormatter = new Intl.NumberFormat('es-419', {
   maximumFractionDigits: 1,
@@ -18,10 +12,6 @@ const shortDateFormatter = new Intl.DateTimeFormat('es-419', {
   day: '2-digit',
   month: 'short',
 })
-
-export function formatCurrency(value: string | number): string {
-  return currencyFormatter.format(Number(value))
-}
 
 // profit_margin is already a percentage value (e.g. "60.00" means 60%),
 // not a 0-1 fraction -- see report_service._profit_margin, which

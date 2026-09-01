@@ -10,14 +10,16 @@ export interface StatTileProps {
 
 export function StatTile({ label, value, loading, error }: StatTileProps) {
   return (
-    <Card className="p-4">
+    <Card className="min-w-0 p-4">
       <p className="text-sm text-ink-muted">{label}</p>
       {loading ? (
         <Skeleton className="mt-2 h-7 w-24" />
       ) : error ? (
         <p className="mt-1 text-sm text-danger">No disponible</p>
       ) : (
-        <p className="mt-1 text-2xl font-semibold text-ink">{value}</p>
+        <p className="mt-1 text-xl font-semibold tabular-nums break-words text-ink sm:text-2xl">
+          {value}
+        </p>
       )}
     </Card>
   )

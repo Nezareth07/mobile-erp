@@ -343,8 +343,52 @@ describe('DashboardPage', () => {
       expect(screen.getByText(currencyText('450.00'))).toBeInTheDocument()
     })
 
+    // 2-up on mobile, 3-up from sm, and only 6-up once there is room for it
+    // (xl). Packing 6 KPI tiles into an intermediate-width viewport made long
+    // monetary values overflow their card.
     const kpiGrid = container.querySelector('.grid.grid-cols-2')
     expect(kpiGrid).not.toBeNull()
-    expect(kpiGrid).toHaveClass('sm:grid-cols-3', 'lg:grid-cols-6')
+    expect(kpiGrid).toHaveClass('sm:grid-cols-3', 'xl:grid-cols-6')
+  })
+
+  it('shows KPI amounts in Colombian pesos, never USD', async () => {
+    server.use(
+      trackedHandler('/dashboard/summary', 'summary', () => ({
+        ...SAMPLE_SUMMARY,
+        sales_today: { ...SAMPLE_SUMMARY.sales_today, total_amount: '1700000.00' },
+        sales_period: {
+          ...SAMPLE_SUMMARY.sales_period,
+          total_amount: '10000000.00',
+        },
+        purchases_period: { purchases_count: 4, total_cost: '100000.00' },
+      })),
+    )
+
+    const { container } = renderDashboard()
+
+    await waitFor(() => {
+      expect(screen.getByText(currencyText('1700000.00'))).toBeInTheDocument()
+    })
+    expect(screen.getByText(currencyText('10000000.00'))).toBeInTheDocument()
+    expect(screen.getByText(currencyText('100000.00'))).toBeInTheDocument()
+    expect(container.textContent).not.toContain('USD')
+    expect(container.textContent).not.toContain('US$')
+  })
+
+  it('guards KPI tiles against monetary overflow at any width', async () => {
+    const { container } = renderDashboard()
+
+    await waitFor(() => {
+      expect(screen.getByText(currencyText('1500.00'))).toBeInTheDocument()
+    })
+
+    // The value can wrap inside the tile instead of pushing it wider, and the
+    // tile is allowed to shrink below its content in the grid track.
+    const valueEl = screen.getByText(currencyText('1500.00'))
+    expect(valueEl).toHaveClass('break-words')
+    expect(valueEl.closest('.min-w-0')).not.toBeNull()
+
+    const kpiGrid = container.querySelector('.grid.grid-cols-2')
+    expect(kpiGrid).not.toHaveClass('lg:grid-cols-6')
   })
 })
