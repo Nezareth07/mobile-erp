@@ -1,22 +1,21 @@
-"""Carrera real: un rol se desactiva mientras se le asigna a un usuario
-activo, al mismo tiempo (Etapa 7, carrera 3 de 3 -- EXPLORATORIA).
+"""Carrera de roles: desactivar un rol mientras se le asigna a un usuario
+activo, al mismo tiempo (Etapa 7, carrera 3 de 3).
 
-A diferencia de las otras dos carreras de esta etapa, aqui NO hay ningun
-`pg_advisory_xact_lock` ni ningun constraint de Postgres que ate
-`user_role` a `role.is_active`. `RoleService.deactivate_role` solo hace
-una lectura simple de `has_active_users(role_id)` antes de desactivar;
-`UserService.assign_roles` -> `_resolve_roles` solo hace una lectura
-simple de `role.is_active` antes de asignar. Ninguna de las dos vuelve a
-verificar nada justo antes de su propio commit.
+Desde 2c291ec, `RoleService.deactivate_role` (via
+`RoleRepository.get_for_update`) y `UserService._resolve_roles` (via
+`RoleRepository.get_by_ids_for_update`) adquieren ambos un
+`SELECT ... FOR UPDATE` sobre la misma fila `role`, serializando esta
+carrera a nivel de Postgres: una de las dos transacciones espera a que
+la otra libere el lock antes de leer `is_active` / `has_active_users`,
+por lo que ya no hay ventana de lectura obsoleta entre ambas rutas.
 
-Este test NO asume un resultado determinista -- verifica directamente el
-invariante ("ningun usuario activo deberia terminar con un rol inactivo
-asignado") contra el estado real tras la carrera. Si el invariante se
-sostiene, el test documenta que se preservo en ESTA ejecucion (no es una
-garantia formal contra todo entrelazado posible, dado que no hay ningun
-mecanismo en el codigo que lo fuerce). Si se rompe, no se debe alterar
-este test para "hacerlo pasar" ni modificar produccion dentro de esta
-etapa -- el hallazgo se reporta tal cual.
+Este test verifica el invariante ("ningun usuario activo deberia
+terminar con un rol inactivo asignado") contra el estado real tras
+la carrera, en lugar de asumir un codigo de estado fijo para cada
+rama concurrente. Con el lock en su lugar, el invariante se sostiene
+de forma consistente; el test se deja en esta forma (verificacion de
+invariante, no de codigos de estado) porque documenta la garantia real
+sin acoplarse a los codigos exactos que Postgres asigne a cada rama.
 
 Sin sleep(), sin mocks: concurrencia real via asyncio.gather contra
 `live_client`. Limpieza manual explicita por id, verificada al final.
