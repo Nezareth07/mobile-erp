@@ -14,17 +14,16 @@ Estado real del backend a la fecha. Refleja únicamente lo implementado y verifi
 | ✔ **Purchase** | Registro de compras a proveedor como operación atómica: valida líneas, da entrada a inventario (`ProductUnit`/`StockLot` según tracking type), actualiza `Product.cost_price`. Sin cancelación implementada (`PurchaseStatus.CANCELLED` existe en el enum, sin flujo). |
 | ✔ **Customer** | Registro mínimo de cliente. CRUD con soft delete, `document_id` opcional con unicidad parcial. `is_default_customer` ("consumidor final") configurable vía `PUT /customers/{id}/default`, con unicidad garantizada por índice único parcial en PostgreSQL. |
 | ✔ **Sale** | Registro de ventas como operación atómica: valida disponibilidad, descuenta inventario (unidad serial o lotes FIFO, posiblemente varios por línea), calcula costo real y utilidad, congela ambos al confirmar. Sin cancelación implementada (`SaleStatus.CANCELLED` existe en el enum, sin flujo). |
+| ✔ **Auth / Users / Roles / Permissions** | Autenticación JWT (access + refresh) y autorización por permisos granulares agrupados en roles. Incluye CLI idempotente de bootstrap del primer ADMIN (`python -m app.cli.bootstrap_admin`), guard contra bloqueo del último administrador, y bloqueo de fila para serializar la carrera desactivar-rol vs asignar-rol. Los 28 permisos y el rol ADMIN se siembran vía migraciones de Alembic, no vía código de aplicación. |
+| ✔ **Dashboard** | Indicadores consolidados del negocio, de solo lectura sobre datos existentes. |
+| ✔ **Reports** | Reportes de ventas, compras e inventario (10 endpoints) sobre `Sale`/`SaleLine`/`Purchase`/`StockMovement`. |
+| ✔ **Suite de pruebas** | 58 archivos de prueba: unitarias, de integración y de concurrencia real (sin mocks ni `sleep()`). Aislamiento por test vía transacción externa + `join_transaction_mode="create_savepoint"`, sin modificar código de producción. Esquema construido con las migraciones reales, no con `create_all()`. |
+| ✔ **Frontend** | Cliente React 19 + TypeScript (Vite, TanStack Query, React Hook Form + Zod, Tailwind 4, Recharts) cubriendo las 10 áreas funcionales. Fuera del alcance de este documento — ver `frontend/README.md`. |
 
 ## Pendiente
 
 | Módulo | Propósito |
 |---|---|
-| **Authentication** | Autenticación de usuarios contra la API (login, emisión/validación de tokens). Prerrequisito de todo lo demás en esta lista — hoy ningún endpoint requiere identidad. |
-| **Users** | Registro de usuarios del sistema (empleados que operan el ERP) — hoy no existe ninguna entidad de usuario; es lo que permitiría, por ejemplo, atribuir una venta a un vendedor específico (`Sale.seller_id`, ya identificado como pendiente en el análisis de Sale). |
-| **Roles** | Agrupación de permisos por rol (cajero, administrador, etc.) para controlar qué puede hacer cada usuario. |
-| **Permissions** | Permisos granulares por acción/recurso, consumidos por Roles y validados en cada endpoint. |
-| **Dashboard** | Vista consolidada de indicadores del negocio (ventas del día, stock bajo, utilidad reciente) — de solo lectura sobre datos ya existentes. |
-| **Reports** | Reportes administrativos formales (ventas por período, utilidad por producto/cliente, historial de movimientos) — la mayoría de los datos que necesitaría ya existen en `Sale`/`SaleLine`/`StockMovement`, falta la capa de agregación/exportación. |
 | **Settings** | Configuración operativa del negocio (datos fiscales, parámetros generales, quizás gestión de `Location` vía API — hoy `Location` no tiene router propio). |
 | **Returns** (Devoluciones) | Devolución total o parcial de una venta ya confirmada. La arquitectura actual ya lo contempla sin refactorizar: `SaleLine` tiene identidad propia (`sale_line_id`) referenciable, `ProductUnit.sale_line_id` ya traza qué venta se llevó cada unidad, y `MovementType` ya tiene `RETURN_IN`/`RETURN_OUT` preparados. |
 | **Warranty** (Garantías) | Gestión de reclamos de garantía sobre una unidad vendida. `ProductUnitStatus.IN_WARRANTY` ya existe en el enum; falta el flujo que lo asigne y el registro del reclamo en sí. |
@@ -35,7 +34,7 @@ Estado real del backend a la fecha. Refleja únicamente lo implementado y verifi
 
 Hallazgos reales detectados durante el desarrollo y las auditorías de Purchase/Customer/Sale, no resueltos por estar fuera del alcance aprobado en su momento:
 
-- **Drift preexistente entre `Purchase.purchase_date` y la base de datos.** El índice `ix_purchase_purchase_date` existe físicamente en la base (creado en una migración anterior) pero el modelo `Purchase` actual no lo declara (`index=True` ausente en `purchase_date`). `alembic check` lo reporta en cada migración nueva; se ha excluido deliberadamente de las migraciones de Customer y Sale por no ser parte de su alcance. Sigue pendiente de una migración correctiva dedicada.
+- ~~**Drift preexistente entre `Purchase.purchase_date` y la base de datos.**~~ **Resuelto** en `8201609`: el modelo `Purchase` ahora declara `index=True` en `purchase_date`, alineándolo con el índice `ix_purchase_purchase_date` que ya existía físicamente en la base. `alembic check` ya no lo reporta.
 - **Módulo `product` no sigue la convención `dependencies.py`.** Sus routers instancian `ProductService(session)` directamente en vez de usar un `get_product_service` inyectado — funcionalmente equivalente, pero inconsistente con el patrón que se consolidó a partir de Supplier. No se ha refactorizado.
 - **Cancelación no implementada en Purchase ni Sale.** Ambos enums de estado (`PurchaseStatus`, `SaleStatus`) tienen `CANCELLED` preparado, pero ningún endpoint ni lógica de servicio lo asigna. El análisis de Sale identificó además que `MovementType` no tiene un valor dedicado para "venta cancelada" (los candidatos existentes, `RETURN_IN`/`ADJUSTMENT_IN`, no representan bien esa semántica) — recomendado agregar uno cuando se implemente.
 - **Sin lock de fila en varias rutas de lectura previas a escritura.** `register_serial_sale` sí bloquea el `ProductUnit` antes de venderlo (`get_for_update`, agregado durante Sale), pero la validación optimista en `_validate_lines` (tanto de Purchase como de Sale) lee sin lock — es deliberado (dar un error temprano y claro), y la protección real contra condiciones de carrera ocurre en el paso de escritura, no en la validación previa.
