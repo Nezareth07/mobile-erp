@@ -14,17 +14,51 @@ A phone is not interchangeable with another phone — it has an IMEI, a specific
 
 > **Status:** actively developed. Core ERP flows (catalog, inventory, purchasing, sales, auth, reporting) are implemented, documented and covered by tests. See [Roadmap](#roadmap).
 
-<!--
-  SCREENSHOTS — add them here once captured. Suggested:
-  docs/images/dashboard.png, docs/images/sale-form.png, docs/images/inventory.png
-  Then reference them like:
-  ![Dashboard](docs/images/dashboard.png)
--->
+---
+
+## Screenshots
+
+### Dashboard
+
+Period KPIs, daily sales chart, best-selling products and top customers.
+
+![Dashboard](docs/images/dashboard.png)
+
+### Inventory
+
+Stock valuation listing the three tracking types side by side — untracked, batch and serial (IMEI) — with available quantity and total value per product.
+
+![Inventory](docs/images/inventory.png)
+
+### Sales
+
+New sale form: customer selection, product line, and the available stock for the selected product shown inline before the sale is registered.
+
+![New sale](docs/images/new-sale.png)
+
+### Purchases
+
+Purchase list with supplier, date, line count, total cost and status.
+
+![Purchases](docs/images/purchases.png)
+
+### Role-Based Access Control
+
+Roles with the number of permissions granted to each and their status.
+
+![Roles](docs/images/roles.png)
+
+### Reports
+
+Sales report over a date range: sale count, revenue, real cost, profit and margin, with a daily breakdown, best-selling products and top customers.
+
+![Sales report](docs/images/reports.png)
 
 ---
 
 ## Table of contents
 
+- [Screenshots](#screenshots)
 - [Why this project is interesting](#why-this-project-is-interesting)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
